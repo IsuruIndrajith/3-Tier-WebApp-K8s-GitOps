@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-init
+  namespace: 3-tier-ns
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/hook: PostSync
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mongo-init
+        image: mongo:4.2
+        command:
+        - "bash"
+        - "-c"
+        - |
+          echo "⏳ Waiting for MongoDB to be ready..."
+          until mongo --host mongo-0.mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+            echo "MongoDB not ready yet..."
+            sleep 5
+          done
+          
+          echo "🔍 Checking if replica set is already initiated..."
+          RS_STATUS=$(mongo --quiet --host mongo-0.mongo --eval "rs.status().ok" || echo 0)
+
+          if [ "$RS_STATUS" = "1" ]; then
+            echo "✅ Replica set already initialized, skipping rs.initiate()"
+          else
+            echo "⚡ Initializing replica set..."
+            mongo --host mongo-0.mongo --eval "
+              rs.initiate({
+                _id: 'rs0',
+                members: [
+                  { _id: 0, host: 'mongo-0.mongo:27017' },
+                  { _id: 1, host: 'mongo-1.mongo:27017' },
+                  { _id: 2, host: 'mongo-2.mongo:27017' }
+                ]
+              })
+            "
+          fi
+
+          echo "🔍 Final replica set status:"
+          mongo --host mongo-0.mongo --eval "rs.status()"
+      

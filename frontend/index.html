@@ -1,0 +1,510 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>3-Tier App on EKS</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+            }
+            
+            .container {
+                max-width: 1000px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                overflow: hidden;
+            }
+            
+            header {
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            
+            header h1 {
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+            }
+            
+            header p {
+                font-size: 1.1rem;
+                opacity: 0.9;
+            }
+            
+            .main-content {
+                padding: 30px;
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 30px;
+            }
+            
+            @media (max-width: 768px) {
+                .main-content {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            .form-section {
+                background: #f8f9fa;
+                padding: 25px;
+                border-radius: 10px;
+                border: 1px solid #e9ecef;
+            }
+            
+            .form-section h2 {
+                color: #495057;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #4facfe;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                color: #495057;
+            }
+            
+            .form-group input,
+            .form-group textarea {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #e9ecef;
+                border-radius: 8px;
+                font-size: 1rem;
+                transition: border-color 0.3s ease;
+            }
+            
+            .form-group input:focus,
+            .form-group textarea:focus {
+                outline: none;
+                border-color: #4facfe;
+                box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+            }
+            
+            .form-group textarea {
+                min-height: 100px;
+                resize: vertical;
+            }
+            
+            button {
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white;
+                border: none;
+                padding: 12px 25px;
+                border-radius: 8px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                width: 100%;
+            }
+            
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+            }
+            
+            button:active {
+                transform: translateY(0);
+            }
+            
+            .items-section {
+                background: white;
+            }
+            
+            .items-section h2 {
+                color: #495057;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #4facfe;
+            }
+            
+            .items-grid {
+                display: grid;
+                gap: 20px;
+            }
+            
+            .item-card {
+                background: white;
+                border: 1px solid #e9ecef;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            
+            .item-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .item-header {
+                display: flex;
+                justify-content: between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            
+            .item-name {
+                font-size: 1.3rem;
+                font-weight: 600;
+                color: #212529;
+                margin: 0;
+            }
+            
+            .item-date {
+                font-size: 0.85rem;
+                color: #6c757d;
+                background: #f8f9fa;
+                padding: 4px 8px;
+                border-radius: 12px;
+            }
+            
+            .item-description {
+                color: #495057;
+                line-height: 1.5;
+                margin-bottom: 15px;
+            }
+            
+            .status {
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                text-align: center;
+                font-weight: 500;
+                animation: fadeIn 0.5s ease;
+            }
+            
+            .status.healthy {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            
+            .status.error {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            
+            .loading {
+                text-align: center;
+                padding: 30px;
+                color: #6c757d;
+            }
+            
+            .empty-state {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+            }
+            
+            .empty-state i {
+                font-size: 3rem;
+                margin-bottom: 15px;
+                opacity: 0.5;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .pulse {
+                animation: pulse 1.5s infinite;
+            }
+            
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+            
+            footer {
+                text-align: center;
+                padding: 20px;
+                background: #f8f9fa;
+                color: #6c757d;
+                border-top: 1px solid #e9ecef;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+    <header>
+        <img src="img.jpg" alt="3-Tier App Banner"
+            style="width: 100%; max-width: 1280px; height: auto; display: block; margin: 0 auto 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+
+        <h1>3-Tier Kubernetes Application</h1>
+        <p>Frontend + Node.js + MongoDB on AWS EKS</p>
+        <h2>Design and Developed by HarishNShetty</h2>
+    </header>
+
+
+
+            <div id="status" class="status"></div>
+
+            <div class="main-content">
+                <div class="form-section">
+                    <h2>Add New Item</h2>
+                    <form id="itemForm">
+                        <div class="form-group">
+                            <label for="name">Item Name</label>
+                            <input type="text" id="name" placeholder="Enter item name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" placeholder="Enter item description" required></textarea>
+                        </div>
+                        <button type="submit">Add Item →</button>
+                    </form>
+                </div>
+
+                <div class="items-section">
+                    <h2>Items from MongoDB</h2>
+                    <div id="itemsList" class="items-grid">
+                        <div class="loading">
+                            <p>Loading items...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>Built with HTML, CSS, JavaScript | Backend: Node.js + Express + MongoDB</p>
+            </footer>
+        </div>
+
+        <script>
+    class ThreeTierApp {
+        constructor() {
+            this.backendUrl = '/api'; // Using nginx proxy
+            this.statusElement = document.getElementById('status');
+            this.itemsListElement = document.getElementById('itemsList');
+            this.itemForm = document.getElementById('itemForm');
+            
+            this.init();
+        }
+        
+        init() {
+            this.bindEvents();
+            this.checkHealth();
+            this.fetchItems();
+        }
+        
+        bindEvents() {
+            this.itemForm.addEventListener('submit', (e) => this.handleSubmit(e));
+        }
+        
+        async checkHealth() {
+            try {
+                this.showStatus('Checking backend health...', 'healthy');
+                const response = await fetch(`${this.backendUrl}/health`);
+
+                if (!response.ok) {
+                    // Special handling if backend has no /health endpoint
+                    if (response.status === 404) {
+                        this.showStatus("Backend reachable (no health endpoint)", "healthy");
+                        setTimeout(() => this.hideStatus(), 3000);
+                        return;
+                    }
+
+                    // Try to parse backend-down JSON if present
+                    let errorMsg = `Server returned ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson && errJson.error) {
+                            errorMsg = errJson.error;
+                        }
+                    } catch {
+                        // ignore parsing errors
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                // Validate backend really sent JSON
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await response.json();
+                    this.showStatus(`Backend is healthy: ${data.message || "OK"}`, 'healthy');
+                    setTimeout(() => this.hideStatus(), 3000);
+                } else {
+                    throw new Error("Backend did not return valid JSON");
+                }
+            } catch (error) {
+                console.error("Health check failed:", error);
+                this.showStatus(`Cannot connect to backend: ${error.message}`, 'error');
+            }
+        }
+
+        async fetchItems() {
+            try {
+                this.showLoading();
+                const response = await fetch(`${this.backendUrl}/items`);
+                
+                if (!response.ok) {
+                    let errorMsg = `Server returned ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson && errJson.error) {
+                            errorMsg = errJson.error;
+                        }
+                    } catch {}
+                    throw new Error(errorMsg);
+                }
+                
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const items = await response.json();
+                    this.displayItems(items);
+                } else {
+                    throw new Error("Backend did not return valid JSON");
+                }
+            } catch (error) {
+                console.error('Error fetching items:', error);
+                this.showError(`Failed to load items: ${error.message}`);
+            }
+        }
+
+        async handleSubmit(e) {
+            e.preventDefault();
+            
+            const nameInput = document.getElementById('name');
+            const descriptionInput = document.getElementById('description');
+            
+            const item = {
+                name: nameInput.value.trim(),
+                description: descriptionInput.value.trim()
+            };
+            
+            if (!item.name || !item.description) {
+                this.showStatus('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                this.showStatus('Adding item...', 'healthy');
+                
+                const response = await fetch(`${this.backendUrl}/items`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(item)
+                });
+                
+                if (response.ok) {
+                    const newItem = await response.json();
+                    this.showStatus('Item added successfully!', 'healthy');
+                    
+                    // Clear form
+                    nameInput.value = '';
+                    descriptionInput.value = '';
+                    
+                    // Refresh items list
+                    this.fetchItems();
+                    
+                    // Hide status after delay
+                    setTimeout(() => this.hideStatus(), 3000);
+                } else {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error adding item:', error);
+                this.showStatus(`Error adding item: ${error.message}`, 'error');
+            }
+        }
+
+        displayItems(items) {
+            if (items.length === 0) {
+                this.itemsListElement.innerHTML = `
+                    <div class="empty-state">
+                        <div>📝</div>
+                        <h3>No items yet</h3>
+                        <p>Add your first item using the form on the left</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            this.itemsListElement.innerHTML = items.map(item => `
+                <div class="item-card">
+                    <div class="item-header">
+                        <h3 class="item-name">${this.escapeHtml(item.name)}</h3>
+                        <span class="item-date">${this.formatDate(item.createdAt)}</span>
+                    </div>
+                    <p class="item-description">${this.escapeHtml(item.description)}</p>
+                </div>
+            `).join('');
+        }
+
+        showLoading() {
+            this.itemsListElement.innerHTML = `
+                <div class="loading">
+                    <p class="pulse">Loading items...</p>
+                </div>
+            `;
+        }
+
+        showError(message) {
+            this.itemsListElement.innerHTML = `
+                <div class="empty-state">
+                    <div>⚠️</div>
+                    <h3>Connection Error</h3>
+                    <p>${message}</p>
+                    <button onclick="app.fetchItems()" style="margin-top: 15px; width: auto;">Retry</button>
+                </div>
+            `;
+        }
+
+        showStatus(message, type) {
+            this.statusElement.textContent = message;
+            this.statusElement.className = `status ${type}`;
+            this.statusElement.style.display = 'block';
+        }
+
+        hideStatus() {
+            this.statusElement.style.display = 'none';
+        }
+
+        formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    }
+
+    // Initialize the application when the page loads
+    let app;
+    document.addEventListener('DOMContentLoaded', () => {
+        app = new ThreeTierApp();
+    });
+
+        </script>
+    </body>
+    </html>
