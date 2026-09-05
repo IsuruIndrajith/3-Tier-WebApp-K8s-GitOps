@@ -5,16 +5,12 @@ metadata:
   namespace: 3-tier-ns
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
-    # Target Type and Listener Port
-
-
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
 
-    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:759369180932:certificate/e67a69a5-a8a2-4656-a911-26d4787a4aa5 # Replace with your ACM certificate ARN
-    # alb.ingress.kubernetes.io/ssl-redirect: '443'
 spec:
   ingressClassName: alb
+
   rules:
     - http:
         paths:
@@ -25,6 +21,7 @@ spec:
                 name: frontend-svc
                 port:
                   number: 80
+
           - path: /api
             pathType: Prefix
             backend:
@@ -32,6 +29,7 @@ spec:
                 name: backend-svc
                 port:
                   number: 3000
+
           - path: /health
             pathType: Exact
             backend:
