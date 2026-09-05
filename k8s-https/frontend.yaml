@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: harishnshetty/3-tier-frontend:latest  # Update with your ECR repository
+        image: isuru071/3-tier-frontend:latest 
         ports:
         - containerPort: 80
         resources:
