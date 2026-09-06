@@ -20,17 +20,17 @@ Each tier is independently containerised, deployed as a Kubernetes workload, and
 
 ```
                         ┌─────────────────────────────────┐
-                        │          AWS Cloud (VPC)         │
-                        │                                  │
+                        │          AWS Cloud (VPC)        │
+                        │                                 │
   User / Browser ──────►│  Route 53 (Custom Domain DNS)   │
-                        │          │                       │
-                        │          ▼                       │
-                        │  AWS Application Load Balancer   │
-                        │  (Internet-Facing ALB)           │
-                        │          │                       │
-                        │          ▼                       │
+                        │          │                      │
+                        │          ▼                      │
+                        │  AWS Application Load Balancer  │
+                        │  (Internet-Facing ALB)          │
+                        │          │                      │
+                        │          ▼                      │
                         │  ┌───────────────────────────┐  │
-                        │  │   Kubernetes (EKS Cluster) │  │
+                        │  │  Kubernetes (EKS Cluster) │  │
                         │  │                           │  │
                         │  │  NGINX Ingress (ALB)      │  │
                         │  │    /  ──► frontend-svc    │  │
@@ -49,17 +49,17 @@ Each tier is independently containerised, deployed as a Kubernetes workload, and
                         │  │  └──────────┘             │  │
                         │  │        │                  │  │
                         │  │  ┌─────────────────────┐  │  │
-                        │  │  │ MongoDB StatefulSet  │  │  │
-                        │  │  │ mongo-0 (PRIMARY)    │  │  │
-                        │  │  │ mongo-1 (SECONDARY)  │  │  │
-                        │  │  │ mongo-2 (SECONDARY)  │  │  │
-                        │  │  │ ReplicaSet rs0        │  │  │
-                        │  │  │ EBS PVC (gp2)        │  │  │
+                        │  │  │ MongoDB StatefulSet │  │  │
+                        │  │  │ mongo-0 (PRIMARY)   │  │  │
+                        │  │  │ mongo-1 (SECONDARY) │  │  │
+                        │  │  │ mongo-2 (SECONDARY) │  │  │
+                        │  │  │ ReplicaSet rs0      │  │  │
+                        │  │  │ EBS PVC (gp2)       │  │  │
                         │  │  └─────────────────────┘  │  │
                         │  └───────────────────────────┘  │
-                        │                                  │
-                        │  Argo CD (GitOps Controller)     │
-                        │  Watches GitHub → Reconciles     │
+                        │                                 │
+                        │  Argo CD (GitOps Controller)    │
+                        │  Watches GitHub → Reconciles    │
                         └─────────────────────────────────┘
 ```
 
@@ -134,7 +134,7 @@ Before starting, ensure you have:
 
 #### Step 1 — Launch an EC2 Instance (Management Server)
 
-Create a `t2.micro` EC2 instance running **Ubuntu 22.04 LTS**. This acts as a dedicated management server from which all cluster operations are performed — keeping your local machine clean and ensuring consistent tooling versions.
+Create a `t3.medium` EC2 instance running **Ubuntu 22.04 LTS**. This acts as a dedicated management server from which all cluster operations are performed — keeping your local machine clean and ensuring consistent tooling versions.
 
 Attach an **IAM role** to the EC2 instance with the following permissions:
 - `IAMFullAccess`
